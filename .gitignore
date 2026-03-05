@@ -1,34 +1,64 @@
-# Keep this repo config-first. Ignore game payloads by default.
-game/**
+# Root-mirror repo policy: ignore everything by default.
+/*
 
-# Allow directories so file allow-list rules can match.
-!game/**/
+# Keep repo metadata/docs trackable.
+!.gitignore
+!README.md
 
-# Allow common configuration and deployment file types.
-!game/**/*.cfg
-!game/**/*.conf
-!game/**/*.ini
-!game/**/*.json
-!game/**/*.yaml
-!game/**/*.yml
-!game/**/*.toml
-!game/**/*.xml
-!game/**/*.vdf
-!game/**/*.kv
-!game/**/*.lst
-!game/**/*.txt
-!game/**/*.md
-!game/**/*.sh
-!game/**/*.ps1
-!game/**/*.psm1
-!game/**/*.bat
-!game/**/*.cmd
-!game/**/*.py
-!game/**/*.js
-!game/**/*.ts
-!game/**/*.sql
+# Allow only your managed Apache FastDL site config (avoid OS update noise).
+!etc/
+!etc/apache2/
+etc/apache2/*
+!etc/apache2/sites-available/
+!etc/apache2/sites-enabled/
+etc/apache2/sites-available/*
+etc/apache2/sites-enabled/*
+!etc/apache2/sites-available/csgo-fastdl.conf
+!etc/apache2/sites-enabled/csgo-fastdl.conf
 
-# Explicitly ignore large/common game asset formats and archives everywhere.
+# Allow FastDL web root, but only setup/config-style files.
+!var/
+!var/www/
+!var/www/csgo-fastdl/
+!var/www/csgo-fastdl/**/
+!var/www/csgo-fastdl/**/*.conf
+!var/www/csgo-fastdl/**/*.htaccess
+!var/www/csgo-fastdl/**/*.txt
+!var/www/csgo-fastdl/**/*.md
+!var/www/csgo-fastdl/**/*.json
+!var/www/csgo-fastdl/**/*.xml
+!var/www/csgo-fastdl/**/*.yaml
+!var/www/csgo-fastdl/**/*.yml
+!var/www/csgo-fastdl/**/*.ini
+!var/www/csgo-fastdl/**/*.sh
+
+# Allow CS:GO server configuration path (for download URL/server cfg changes).
+!home/
+!home/steam/
+!home/steam/csgo-server/
+!home/steam/csgo-server/csgo/
+!home/steam/csgo-server/csgo/cfg/
+!home/steam/csgo-server/csgo/cfg/**/
+!home/steam/csgo-server/csgo/cfg/**/*.cfg
+!home/steam/csgo-server/csgo/cfg/**/*.txt
+!home/steam/csgo-server/csgo/cfg/**/*.vdf
+!home/steam/csgo-server/csgo/cfg/**/*.json
+!home/steam/csgo-server/csgo/cfg/**/*.ini
+!home/steam/csgo-server/csgo/cfg/**/*.sh
+
+# Optional compatibility path used in this repo today.
+!game/
+!game/csgo/
+!game/csgo/cfg/
+!game/csgo/cfg/**/
+!game/csgo/cfg/**/*.cfg
+!game/csgo/cfg/**/*.txt
+!game/csgo/cfg/**/*.vdf
+
+# Never back up Steam auth/client data.
+home/steam/Steam/
+
+# Never track game payloads or archives (FastDL content files).
 *.bsp
 *.bz2
 *.ztmp
@@ -49,16 +79,3 @@ game/**
 *.rar
 *.tar
 *.gz
-
-# Ignore known heavy runtime/output folders for CS:GO content.
-game/csgo/logs/
-game/csgo/crashdumps/
-game/csgo/replays/
-game/csgo/downloads/
-game/csgo/download/
-game/csgo/maps/
-game/csgo/materials/
-game/csgo/models/
-game/csgo/sound/
-game/csgo/resource/
-game/csgo/workshop/
