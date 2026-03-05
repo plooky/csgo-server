@@ -1,81 +1,12 @@
-# Root-mirror repo policy: ignore everything by default.
-/*
+# Runtime data pulled/created by containers.
+data/
 
-# Keep repo metadata/docs trackable.
-!.gitignore
-!README.md
+# Local environment secrets.
+.env
 
-# Allow only your managed Apache FastDL site config (avoid OS update noise).
-!etc/
-!etc/apache2/
-etc/apache2/*
-!etc/apache2/sites-available/
-!etc/apache2/sites-enabled/
-etc/apache2/sites-available/*
-etc/apache2/sites-enabled/*
-!etc/apache2/sites-available/csgo-fastdl.conf
-!etc/apache2/sites-enabled/csgo-fastdl.conf
+# Common editor/system files.
+.DS_Store
+Thumbs.db
 
-# Allow FastDL web root, but only setup/config-style files.
-!var/
-!var/www/
-!var/www/csgo-fastdl/
-!var/www/csgo-fastdl/**/
-!var/www/csgo-fastdl/**/*.conf
-!var/www/csgo-fastdl/**/*.htaccess
-!var/www/csgo-fastdl/**/*.txt
-!var/www/csgo-fastdl/**/*.md
-!var/www/csgo-fastdl/**/*.json
-!var/www/csgo-fastdl/**/*.xml
-!var/www/csgo-fastdl/**/*.yaml
-!var/www/csgo-fastdl/**/*.yml
-!var/www/csgo-fastdl/**/*.ini
-!var/www/csgo-fastdl/**/*.sh
-
-# Allow CS:GO server configuration path (for download URL/server cfg changes).
-!home/
-!home/steam/
-!home/steam/csgo-server/
-!home/steam/csgo-server/csgo/
-!home/steam/csgo-server/csgo/cfg/
-!home/steam/csgo-server/csgo/cfg/**/
-!home/steam/csgo-server/csgo/cfg/**/*.cfg
-!home/steam/csgo-server/csgo/cfg/**/*.txt
-!home/steam/csgo-server/csgo/cfg/**/*.vdf
-!home/steam/csgo-server/csgo/cfg/**/*.json
-!home/steam/csgo-server/csgo/cfg/**/*.ini
-!home/steam/csgo-server/csgo/cfg/**/*.sh
-
-# Optional compatibility path used in this repo today.
-!game/
-!game/csgo/
-!game/csgo/cfg/
-!game/csgo/cfg/**/
-!game/csgo/cfg/**/*.cfg
-!game/csgo/cfg/**/*.txt
-!game/csgo/cfg/**/*.vdf
-
-# Never back up Steam auth/client data.
-home/steam/Steam/
-
-# Never track game payloads or archives (FastDL content files).
-*.bsp
-*.bz2
-*.ztmp
-*.vpk
-*.dem
-*.nav
-*.ain
-*.mdl
-*.vtf
-*.vmt
-*.mp3
-*.wav
-*.ogg
-*.mp4
-*.webm
-*.7z
-*.zip
-*.rar
-*.tar
-*.gz
+# FastDL generated archives.
+fastdl/csgo/**/*.bz2

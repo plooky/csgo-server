@@ -1,0 +1,63 @@
+name: csgo-server
+
+services:
+  plugin-bootstrap:
+    image: alpine:3.20
+    container_name: csgo-plugin-bootstrap
+    restart: "no"
+    environment:
+      GAME_ROOT: /home/steam/csgo-dedicated/csgo
+      MMS_BRANCH: ${MMS_BRANCH:-1.11}
+      SM_BRANCH: ${SM_BRANCH:-1.11}
+      FORCE_PLUGIN_REINSTALL: ${FORCE_PLUGIN_REINSTALL:-0}
+    volumes:
+      - ./data/csgo:/home/steam/csgo-dedicated
+      - ./overrides:/overrides:ro
+      - ./scripts:/scripts:ro
+    command: >
+      /bin/sh -lc "apk add --no-cache curl tar gzip >/dev/null &&
+      /scripts/install-plugins.sh"
+
+  csgo:
+    image: cm2network/csgo:latest
+    container_name: csgo-server
+    restart: unless-stopped
+    depends_on:
+      plugin-bootstrap:
+        condition: service_completed_successfully
+    environment:
+      SRCDS_TOKEN: ${SRCDS_TOKEN}
+      SRCDS_HOSTNAME: ${SRCDS_HOSTNAME}
+      SRCDS_RCONPW: ${SRCDS_RCONPW}
+      SRCDS_PW: ${SRCDS_PW}
+      SRCDS_MAXPLAYERS: ${SRCDS_MAXPLAYERS:-12}
+      SRCDS_PORT: ${SRCDS_PORT:-27015}
+      SRCDS_CLIENT_PORT: ${SRCDS_CLIENT_PORT:-27005}
+      SRCDS_TV_PORT: ${SRCDS_TV_PORT:-27020}
+      SRCDS_STARTMAP: ${SRCDS_STARTMAP:-de_dust2}
+      SRCDS_MAPGROUP: ${SRCDS_MAPGROUP:-mg_active}
+      SRCDS_GAMETYPE: ${SRCDS_GAMETYPE:-0}
+      SRCDS_GAMEMODE: ${SRCDS_GAMEMODE:-1}
+      TV_ENABLE: ${TV_ENABLE:-1}
+      RETRY_ATTEMPTS: ${RETRY_ATTEMPTS:-5}
+    volumes:
+      - ./data/csgo:/home/steam/csgo-dedicated
+    ports:
+      - "${SRCDS_PORT:-27015}:${SRCDS_PORT:-27015}/udp"
+      - "${SRCDS_PORT:-27015}:${SRCDS_PORT:-27015}/tcp"
+      - "${SRCDS_CLIENT_PORT:-27005}:${SRCDS_CLIENT_PORT:-27005}/udp"
+      - "${SRCDS_TV_PORT:-27020}:${SRCDS_TV_PORT:-27020}/udp"
+
+  fastdl:
+    image: httpd:2.4-alpine
+    container_name: csgo-fastdl
+    restart: unless-stopped
+    volumes:
+      - ./fastdl:/usr/local/apache2/htdocs:ro
+      - ./docker/fastdl/fastdl.conf:/usr/local/apache2/conf/extra/fastdl.conf:ro
+    command: >
+      /bin/sh -lc "grep -q 'fastdl.conf' /usr/local/apache2/conf/httpd.conf ||
+      echo 'Include conf/extra/fastdl.conf' >> /usr/local/apache2/conf/httpd.conf;
+      httpd-foreground"
+    ports:
+      - "${FASTDL_PORT:-8080}:80"
