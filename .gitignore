@@ -1,0 +1,64 @@
+# Keep this repo config-first. Ignore game payloads by default.
+game/**
+
+# Allow directories so file allow-list rules can match.
+!game/**/
+
+# Allow common configuration and deployment file types.
+!game/**/*.cfg
+!game/**/*.conf
+!game/**/*.ini
+!game/**/*.json
+!game/**/*.yaml
+!game/**/*.yml
+!game/**/*.toml
+!game/**/*.xml
+!game/**/*.vdf
+!game/**/*.kv
+!game/**/*.lst
+!game/**/*.txt
+!game/**/*.md
+!game/**/*.sh
+!game/**/*.ps1
+!game/**/*.psm1
+!game/**/*.bat
+!game/**/*.cmd
+!game/**/*.py
+!game/**/*.js
+!game/**/*.ts
+!game/**/*.sql
+
+# Explicitly ignore large/common game asset formats and archives everywhere.
+*.bsp
+*.bz2
+*.ztmp
+*.vpk
+*.dem
+*.nav
+*.ain
+*.mdl
+*.vtf
+*.vmt
+*.mp3
+*.wav
+*.ogg
+*.mp4
+*.webm
+*.7z
+*.zip
+*.rar
+*.tar
+*.gz
+
+# Ignore known heavy runtime/output folders for CS:GO content.
+game/csgo/logs/
+game/csgo/crashdumps/
+game/csgo/replays/
+game/csgo/downloads/
+game/csgo/download/
+game/csgo/maps/
+game/csgo/materials/
+game/csgo/models/
+game/csgo/sound/
+game/csgo/resource/
+game/csgo/workshop/
