@@ -5,18 +5,18 @@ Docker Compose stack for:
 - Apache FastDL (map/file hosting)
 - Metamod + Sourcemod bootstrap
 
-## TL;DR (First Run on Linux)
+## TL;DR (First Run, Local-Only)
 
-From the repo root on your server:
+From the repo root:
 
 ```bash
-sudo install -d -m 700 /etc/csgo-server /etc/csgo-server/secrets
-sudo cp .env.example /etc/csgo-server/server.env
-sudo nano /etc/csgo-server/server.env
-SECRETS_DIR=/etc/csgo-server/secrets docker compose --profile setup run --rm secret-init
-sudo chmod 600 /etc/csgo-server/server.env /etc/csgo-server/secrets/srcds_token /etc/csgo-server/secrets/srcds_rconpw
-nano overrides/csgo/cfg/server.cfg   # set sv_downloadurl and hostname
-ENV_FILE=/etc/csgo-server/server.env SECRETS_DIR=/etc/csgo-server/secrets sh ./scripts/up-with-secrets.sh
+cp .env.example .env
+mkdir -p overrides.local/csgo
+cp -an overrides/csgo/. overrides.local/csgo/
+docker compose --profile setup run --rm secret-init
+nano .env
+nano overrides.local/csgo/cfg/server.cfg   # set hostname + sv_downloadurl
+sh ./scripts/up-with-secrets.sh
 ```
 
 Then verify:
@@ -25,10 +25,20 @@ Then verify:
 sh ./scripts/up-with-secrets.sh logs -f csgo
 ```
 
+## Pull-Safe Customization Model
+
+- `overrides/csgo` is tracked default config.
+- `overrides.local/csgo` is your personal config and is gitignored.
+- On startup, tracked defaults are applied first, then `overrides.local` is applied on top.
+- `.env` and `secrets/srcds_*` are gitignored local runtime secrets/config.
+- After `git pull`, you can copy any newly added default files without overwriting your edits:
+  - `cp -an overrides/csgo/. overrides.local/csgo/`
+
 ## Repo Layout
 
 - `docker-compose.yml`: services for secret init, plugin bootstrap, CS:GO, and FastDL.
-- `overrides/csgo`: tracked server and plugin config overrides applied on boot.
+- `overrides/csgo`: tracked default overrides applied on boot.
+- `overrides.local/csgo` (ignored): local personal overrides applied after tracked defaults.
 - `secrets/init-secrets.sh`: interactive secret setup script meant to run in a one-off container.
 - `fastdl/csgo`: FastDL document root (custom maps/files live here).
 - `scripts/install-plugins.sh`: installs/updates Metamod + Sourcemod, then applies overrides.
@@ -45,68 +55,31 @@ sh ./scripts/up-with-secrets.sh logs -f csgo
   - UDP `27020` (GOTV)
   - TCP `8080` (FastDL; change with `FASTDL_PORT`)
 
-## Config and Secrets (Public Repo Safe)
+## First Boot (Step by Step)
 
-- Commit templates and setup scripts only: `.env.example`, `secrets/*.example`, and `secrets/init-secrets.sh`.
-- Keep real values in private host files that are not committed.
-- Do not store live `rcon_password` or `sv_setsteamaccount` values in tracked `overrides/csgo/cfg/server.cfg`.
-- Keep `sv_downloadurl` in `overrides/csgo/cfg/server.cfg` set to your public FastDL URL.
-
-## Ubuntu First Boot (Recommended)
-
-### Option A: one private env file (simple)
-
-1. Create private config directory:
-   - `sudo install -d -m 700 /etc/csgo-server`
-2. Create private env file from template:
-   - `sudo cp .env.example /etc/csgo-server/server.env`
-3. Edit `/etc/csgo-server/server.env` and set real values, including:
-   - `SRCDS_TOKEN`
-   - `SRCDS_RCONPW`
-4. Lock file permissions:
-   - `sudo chmod 600 /etc/csgo-server/server.env`
-5. Update `overrides/csgo/cfg/server.cfg`:
-   - set server name
+1. Create local env file:
+   - `cp .env.example .env`
+2. Create local override tree:
+   - `mkdir -p overrides.local/csgo`
+   - `cp -an overrides/csgo/. overrides.local/csgo/`
+3. Generate local secret files:
+   - `docker compose --profile setup run --rm secret-init`
+4. Edit local runtime config:
+   - `nano .env`
+5. Edit local server config:
+   - `nano overrides.local/csgo/cfg/server.cfg`
+   - set `hostname`
    - set `sv_downloadurl` to your public FastDL URL (`http://host:8080/csgo`)
 6. Start:
-   - `docker compose --env-file /etc/csgo-server/server.env up -d`
-
-### Option B: split env file + secret files (safer for shared servers)
-
-1. Create private directories:
-   - `sudo install -d -m 700 /etc/csgo-server /etc/csgo-server/secrets`
-2. Create private env file:
-   - `sudo cp .env.example /etc/csgo-server/server.env`
-3. In `/etc/csgo-server/server.env`, leave these blank:
-   - `SRCDS_TOKEN=`
-   - `SRCDS_RCONPW=`
-4. Run interactive secret setup in a container:
-   - `SECRETS_DIR=/etc/csgo-server/secrets docker compose --profile setup run --rm secret-init`
-5. Lock permissions:
-   - `sudo chmod 600 /etc/csgo-server/server.env /etc/csgo-server/secrets/srcds_token /etc/csgo-server/secrets/srcds_rconpw`
-6. Start with helper script:
-   - `ENV_FILE=/etc/csgo-server/server.env SECRETS_DIR=/etc/csgo-server/secrets sh ./scripts/up-with-secrets.sh`
-
-## Local First Boot (Quick)
-
-1. Copy env template and fill values:
-   - `cp .env.example .env`
-2. Generate local secret files in a container:
-   - `docker compose --profile setup run --rm secret-init`
-3. Update `overrides/csgo/cfg/server.cfg`:
-   - set server name
-   - set `sv_downloadurl` to your public FastDL URL (`http://host:8080/csgo`)
-4. Start:
    - `sh ./scripts/up-with-secrets.sh`
 
-On startup, `plugin-bootstrap` downloads/install Metamod + Sourcemod if missing (or forced), then copies tracked overrides into the live game tree.
+On startup, `plugin-bootstrap` downloads/install Metamod + Sourcemod if missing (or forced), then applies tracked overrides followed by local overrides.
 
 ## Updating Plugins
 
 - Normal boot keeps existing plugin install.
 - Force reinstall on next boot:
-  - `FORCE_PLUGIN_REINSTALL=1 docker compose --env-file /etc/csgo-server/server.env up plugin-bootstrap`
-  - then set `FORCE_PLUGIN_REINSTALL=0` in your private env file.
+  - `FORCE_PLUGIN_REINSTALL=1 sh ./scripts/up-with-secrets.sh up plugin-bootstrap`
 
 ## FastDL Workflow
 

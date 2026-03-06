@@ -4,14 +4,6 @@ set -eu
 ENV_FILE="${ENV_FILE:-.env}"
 SECRETS_DIR="${SECRETS_DIR:-./secrets}"
 
-if [ ! -f "${ENV_FILE}" ] && [ -f "/etc/csgo-server/server.env" ]; then
-  ENV_FILE="/etc/csgo-server/server.env"
-fi
-
-if [ ! -d "${SECRETS_DIR}" ] && [ -d "/etc/csgo-server/secrets" ]; then
-  SECRETS_DIR="/etc/csgo-server/secrets"
-fi
-
 require_file() {
   if [ ! -f "$1" ]; then
     echo "[up-with-secrets] Missing required file: $1" >&2

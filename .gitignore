@@ -12,6 +12,9 @@ secrets/*
 !secrets/*.sh
 !secrets/README.md
 
+# Local customization overrides (applied after tracked defaults).
+overrides.local/
+
 # Common editor/system files.
 .DS_Store
 Thumbs.db

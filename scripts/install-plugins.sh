@@ -2,7 +2,8 @@
 set -eu
 
 GAME_ROOT="${GAME_ROOT:-/home/steam/csgo-dedicated/csgo}"
-OVERRIDES_ROOT="${OVERRIDES_ROOT:-/overrides/csgo}"
+DEFAULT_OVERRIDES_ROOT="${DEFAULT_OVERRIDES_ROOT:-/overrides-default/csgo}"
+LOCAL_OVERRIDES_ROOT="${LOCAL_OVERRIDES_ROOT:-/overrides-local/csgo}"
 MMS_BRANCH="${MMS_BRANCH:-1.11}"
 SM_BRANCH="${SM_BRANCH:-1.11}"
 FORCE_PLUGIN_REINSTALL="${FORCE_PLUGIN_REINSTALL:-0}"
@@ -28,6 +29,16 @@ install_archive() {
   tar -xzf "${archive_path}" -C "${GAME_ROOT}"
 }
 
+apply_overrides() {
+  label="$1"
+  root="$2"
+
+  if [ -d "${root}" ]; then
+    echo "[plugin-bootstrap] Applying ${label} overrides from ${root}"
+    cp -a "${root}/." "${GAME_ROOT}/"
+  fi
+}
+
 if [ "${FORCE_PLUGIN_REINSTALL}" = "1" ]; then
   echo "[plugin-bootstrap] FORCE_PLUGIN_REINSTALL=1, clearing existing plugin files"
   rm -rf "${GAME_ROOT}/addons/metamod" "${GAME_ROOT}/addons/sourcemod" "${GAME_ROOT}/addons/metamod.vdf"
@@ -45,10 +56,8 @@ else
   echo "[plugin-bootstrap] Sourcemod already installed"
 fi
 
-if [ -d "${OVERRIDES_ROOT}" ]; then
-  echo "[plugin-bootstrap] Applying tracked overrides from ${OVERRIDES_ROOT}"
-  cp -a "${OVERRIDES_ROOT}/." "${GAME_ROOT}/"
-fi
+apply_overrides "tracked" "${DEFAULT_OVERRIDES_ROOT}"
+apply_overrides "local" "${LOCAL_OVERRIDES_ROOT}"
 
 cat > "${GAME_ROOT}/addons/.bootstrap-manifest" <<EOF
 MMS_URL=${MMS_URL}

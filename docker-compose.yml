@@ -23,12 +23,15 @@ services:
     restart: "no"
     environment:
       GAME_ROOT: /home/steam/csgo-dedicated/csgo
+      DEFAULT_OVERRIDES_ROOT: /overrides-default/csgo
+      LOCAL_OVERRIDES_ROOT: /overrides-local/csgo
       MMS_BRANCH: ${MMS_BRANCH:-1.11}
       SM_BRANCH: ${SM_BRANCH:-1.11}
       FORCE_PLUGIN_REINSTALL: ${FORCE_PLUGIN_REINSTALL:-0}
     volumes:
       - ./data/csgo:/home/steam/csgo-dedicated
-      - ./overrides:/overrides:ro
+      - ./overrides:/overrides-default:ro
+      - ./overrides.local:/overrides-local:ro
       - ./scripts:/scripts:ro
     command: >
       /bin/sh -lc "apk add --no-cache curl tar gzip >/dev/null &&
@@ -43,7 +46,7 @@ services:
         condition: service_completed_successfully
     environment:
       SRCDS_TOKEN: ${SRCDS_TOKEN:-}
-      SRCDS_HOSTNAME: ${SRCDS_HOSTNAME:-My CS:GO Server}
+      SRCDS_HOSTNAME: ${SRCDS_HOSTNAME:-csgo server}
       SRCDS_RCONPW: ${SRCDS_RCONPW:-}
       SRCDS_PW: ${SRCDS_PW:-}
       SRCDS_MAXPLAYERS: ${SRCDS_MAXPLAYERS:-12}
