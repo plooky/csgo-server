@@ -35,7 +35,7 @@ services:
       - ./overrides.local:/overrides-local:ro
       - ./scripts:/scripts:ro
     command: >
-      /bin/sh -lc "apk add --no-cache curl tar gzip >/dev/null &&
+      /bin/sh -lc "apk add --no-cache curl tar gzip unzip >/dev/null &&
       sh /scripts/install-plugins.sh"
 
   csgo:
@@ -75,9 +75,9 @@ services:
     volumes:
       - ./fastdl:/usr/local/apache2/htdocs:ro
       - ./docker/fastdl/fastdl.conf:/usr/local/apache2/conf/extra/fastdl.conf:ro
-    command: >
-      /bin/sh -lc "grep -q 'fastdl.conf' /usr/local/apache2/conf/httpd.conf ||
-      echo 'Include conf/extra/fastdl.conf' >> /usr/local/apache2/conf/httpd.conf;
-      httpd-foreground"
+    command:
+      - httpd-foreground
+      - -C
+      - Include conf/extra/fastdl.conf
     ports:
       - "${FASTDL_PORT:-8080}:80"

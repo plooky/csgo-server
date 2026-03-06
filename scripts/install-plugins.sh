@@ -22,11 +22,47 @@ trap cleanup EXIT
 install_archive() {
   name="$1"
   url="$2"
-  archive_path="${TMP_DIR}/${name}.tar.gz"
+  archive_path="${TMP_DIR}/${name}.archive"
+  headers_path="${TMP_DIR}/${name}.headers"
+
+  extract_archive() {
+    archive="$1"
+
+    if gzip -t "${archive}" >/dev/null 2>&1; then
+      tar -xzf "${archive}" -C "${GAME_ROOT}"
+      return 0
+    fi
+
+    if tar -tf "${archive}" >/dev/null 2>&1; then
+      tar -xf "${archive}" -C "${GAME_ROOT}"
+      return 0
+    fi
+
+    if unzip -tqq "${archive}" >/dev/null 2>&1; then
+      unzip -oq "${archive}" -d "${GAME_ROOT}"
+      return 0
+    fi
+
+    return 1
+  }
 
   echo "[plugin-bootstrap] Downloading ${name} from ${url}"
-  curl -fsSL --retry 3 --retry-delay 2 "${url}" -o "${archive_path}"
-  tar -xzf "${archive_path}" -C "${GAME_ROOT}"
+  curl -fsSL --retry 3 --retry-delay 2 -D "${headers_path}" "${url}" -o "${archive_path}"
+
+  if ! extract_archive "${archive_path}"; then
+    content_type="$(grep -i '^content-type:' "${headers_path}" | tail -n 1 | cut -d' ' -f2- | tr -d '\r' || true)"
+    if [ -n "${content_type}" ]; then
+      echo "[plugin-bootstrap] ${name} download content-type: ${content_type}" >&2
+    fi
+
+    first_line="$(head -n 1 "${archive_path}" | tr -d '\r' || true)"
+    if [ -n "${first_line}" ]; then
+      echo "[plugin-bootstrap] First response line: ${first_line}" >&2
+    fi
+
+    echo "[plugin-bootstrap] Unsupported archive format for ${name} from ${url}" >&2
+    exit 1
+  fi
 }
 
 apply_overrides() {
