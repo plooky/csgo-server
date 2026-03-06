@@ -5,40 +5,36 @@ Docker Compose stack for:
 - Apache FastDL (map/file hosting)
 - Metamod + Sourcemod bootstrap
 
-## TL;DR (First Run, Local-Only)
+## TL;DR (First Run)
 
-From the repo root:
+Do these steps from the repo root.
 
-```bash
-cp .env.example .env
-mkdir -p overrides.local/csgo
-cp -an overrides/csgo/. overrides.local/csgo/
-docker compose --profile setup run --rm secret-init
-nano .env
-nano overrides.local/csgo/cfg/custom/01-server-identity.cfg
-nano overrides.local/csgo/cfg/custom/02-access-security.cfg
-sh ./scripts/up-with-secrets.sh
-```
+1. Create local-only config files (required once).
+   - `cp .env.example .env`
+   - `mkdir -p overrides.local/csgo`
+   - `cp -an overrides/csgo/. overrides.local/csgo/`
+2. Create local-only secrets (required once).
+   - `docker compose --profile setup run --rm secret-init`
+3. Set your server values (required).
+   - `nano .env`
+   - `nano overrides.local/csgo/cfg/custom/01-server-identity.cfg`
+   - `nano overrides.local/csgo/cfg/custom/02-access-security.cfg`
+   - `nano overrides.local/csgo/motd.txt`
+4. Start containers.
+   - `sh ./scripts/up-with-secrets.sh`
+5. Verify the server is running.
+   - `sh ./scripts/up-with-secrets.sh logs -f csgo`
 
-Then verify:
-
-```bash
-sh ./scripts/up-with-secrets.sh logs -f csgo
-```
-
-If you want hidden typing instead of paste-friendly visible input:
-
-```bash
-SECRET_PROMPT_MODE=hidden docker compose --profile setup run --rm secret-init
-```
+Optional: hidden secret input mode instead of paste-friendly visible input:
+- `SECRET_PROMPT_MODE=hidden docker compose --profile setup run --rm secret-init`
 
 ## Pull-Safe Customization Model
 
-- `overrides/csgo` is tracked default config.
-- `overrides.local/csgo` is your personal config and is gitignored.
-- On startup, tracked defaults are applied first, then `overrides.local` is applied on top.
-- `.env` and `secrets/srcds_*` are gitignored local runtime secrets/config.
-- After `git pull`, you can copy any newly added default files without overwriting your edits:
+- `overrides/csgo` is tracked defaults. Do not put personal edits here.
+- `overrides.local/csgo` is gitignored. Put your server-specific edits here.
+- On startup, tracked defaults are applied first, then `overrides.local` overrides them.
+- `.env` and `secrets/srcds_*` are gitignored local runtime config/secrets.
+- After `git pull`, sync newly added default files without overwriting your local edits:
   - `cp -an overrides/csgo/. overrides.local/csgo/`
 
 ## Repo Layout
@@ -66,26 +62,23 @@ SECRET_PROMPT_MODE=hidden docker compose --profile setup run --rm secret-init
 
 ## First Boot (Step by Step)
 
-1. Create local env file:
+1. Create local env file.
    - `cp .env.example .env`
-2. Create local override tree:
+2. Create local override tree.
    - `mkdir -p overrides.local/csgo`
    - `cp -an overrides/csgo/. overrides.local/csgo/`
-3. Generate local secret files:
+3. Generate local secret files.
    - `docker compose --profile setup run --rm secret-init`
-4. Edit local runtime config:
+4. Set runtime config.
    - `nano .env`
-5. Edit local server config:
-   - `nano overrides.local/csgo/cfg/custom/01-server-identity.cfg`
-   - `nano overrides.local/csgo/cfg/custom/02-access-security.cfg`
-   - `nano overrides.local/csgo/motd.txt`
-   - set `hostname` in `01-server-identity.cfg`
-   - set `sv_downloadurl` in `02-access-security.cfg` to your public FastDL URL (`http://host:8080/csgo`)
-   - set the website URL in `motd.txt`
-6. Start:
+5. Set server config in local overrides.
+   - `nano overrides.local/csgo/cfg/custom/01-server-identity.cfg` (set `hostname`)
+   - `nano overrides.local/csgo/cfg/custom/02-access-security.cfg` (set `sv_downloadurl` to `http://host:8080/csgo`)
+   - `nano overrides.local/csgo/motd.txt` (set scoreboard website URL)
+6. Start services.
    - `sh ./scripts/up-with-secrets.sh`
 
-On startup, `plugin-bootstrap` downloads/install Metamod + Sourcemod if missing (or forced), then applies tracked overrides followed by local overrides.
+On startup, `plugin-bootstrap` installs Metamod + Sourcemod if missing (or forced), then applies tracked overrides and finally local overrides.
 
 ## Customization Files
 
