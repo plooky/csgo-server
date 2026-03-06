@@ -1,6 +1,22 @@
 name: csgo-server
 
 services:
+  secret-init:
+    image: alpine:3.20
+    profiles:
+      - setup
+    stdin_open: true
+    tty: true
+    environment:
+      SECRETS_DIR: /secrets
+      FORCE: ${FORCE_SECRET_OVERWRITE:-0}
+      SRCDS_TOKEN: ${SRCDS_TOKEN:-}
+      SRCDS_RCONPW: ${SRCDS_RCONPW:-}
+    volumes:
+      - ${SECRETS_DIR:-./secrets}:/secrets
+      - ./secrets/init-secrets.sh:/init-secrets.sh:ro
+    command: /bin/sh /init-secrets.sh
+
   plugin-bootstrap:
     image: alpine:3.20
     container_name: csgo-plugin-bootstrap
@@ -26,10 +42,10 @@ services:
       plugin-bootstrap:
         condition: service_completed_successfully
     environment:
-      SRCDS_TOKEN: ${SRCDS_TOKEN}
-      SRCDS_HOSTNAME: ${SRCDS_HOSTNAME}
-      SRCDS_RCONPW: ${SRCDS_RCONPW}
-      SRCDS_PW: ${SRCDS_PW}
+      SRCDS_TOKEN: ${SRCDS_TOKEN:-}
+      SRCDS_HOSTNAME: ${SRCDS_HOSTNAME:-My CS:GO Server}
+      SRCDS_RCONPW: ${SRCDS_RCONPW:-}
+      SRCDS_PW: ${SRCDS_PW:-}
       SRCDS_MAXPLAYERS: ${SRCDS_MAXPLAYERS:-12}
       SRCDS_PORT: ${SRCDS_PORT:-27015}
       SRCDS_CLIENT_PORT: ${SRCDS_CLIENT_PORT:-27005}

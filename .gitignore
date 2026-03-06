@@ -1,8 +1,16 @@
 # Runtime data pulled/created by containers.
 data/
 
-# Local environment secrets.
+# Local environment files.
 .env
+.env.*
+!.env.example
+
+# Optional local secret files.
+secrets/*
+!secrets/*.example
+!secrets/*.sh
+!secrets/README.md
 
 # Common editor/system files.
 .DS_Store
