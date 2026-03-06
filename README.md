@@ -5,6 +5,26 @@ Docker Compose stack for:
 - Apache FastDL (map/file hosting)
 - Metamod + Sourcemod bootstrap
 
+## TL;DR (First Run on Linux)
+
+From the repo root on your server:
+
+```bash
+sudo install -d -m 700 /etc/csgo-server /etc/csgo-server/secrets
+sudo cp .env.example /etc/csgo-server/server.env
+sudo nano /etc/csgo-server/server.env
+SECRETS_DIR=/etc/csgo-server/secrets docker compose --profile setup run --rm secret-init
+sudo chmod 600 /etc/csgo-server/server.env /etc/csgo-server/secrets/srcds_token /etc/csgo-server/secrets/srcds_rconpw
+nano overrides/csgo/cfg/server.cfg   # set sv_downloadurl and hostname
+ENV_FILE=/etc/csgo-server/server.env SECRETS_DIR=/etc/csgo-server/secrets sh ./scripts/up-with-secrets.sh
+```
+
+Then verify:
+
+```bash
+sh ./scripts/up-with-secrets.sh logs -f csgo
+```
+
 ## Repo Layout
 
 - `docker-compose.yml`: services for secret init, plugin bootstrap, CS:GO, and FastDL.
