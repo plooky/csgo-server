@@ -25,6 +25,12 @@ Then verify:
 sh ./scripts/up-with-secrets.sh logs -f csgo
 ```
 
+If you want hidden typing instead of paste-friendly visible input:
+
+```bash
+SECRET_PROMPT_MODE=hidden docker compose --profile setup run --rm secret-init
+```
+
 ## Pull-Safe Customization Model
 
 - `overrides/csgo` is tracked default config.

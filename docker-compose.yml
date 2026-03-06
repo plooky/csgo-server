@@ -10,6 +10,7 @@ services:
     environment:
       SECRETS_DIR: /secrets
       FORCE: ${FORCE_SECRET_OVERWRITE:-0}
+      PROMPT_MODE: ${SECRET_PROMPT_MODE:-plain}
       SRCDS_TOKEN: ${SRCDS_TOKEN:-}
       SRCDS_RCONPW: ${SRCDS_RCONPW:-}
     volumes:

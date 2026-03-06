@@ -5,9 +5,18 @@ SECRETS_DIR="${SECRETS_DIR:-/secrets}"
 TOKEN_FILE="${SECRETS_DIR}/srcds_token"
 RCON_FILE="${SECRETS_DIR}/srcds_rconpw"
 FORCE="${FORCE:-0}"
+PROMPT_MODE="${PROMPT_MODE:-plain}"
 
 trim_newlines() {
   tr -d '\r\n'
+}
+
+strip_bracketed_paste() {
+  value="$1"
+  esc="$(printf '\033')"
+  value="${value#${esc}[200~}"
+  value="${value%${esc}[201~}"
+  printf "%s" "${value}"
 }
 
 confirm_overwrite() {
@@ -33,11 +42,17 @@ prompt_secret() {
 
   while [ -z "${value}" ]; do
     printf "%s: " "${label}" >&2
-    old_stty="$(stty -g)"
-    stty -echo
-    IFS= read -r value || true
-    stty "${old_stty}"
-    printf "\n" >&2
+    if [ "${PROMPT_MODE}" = "hidden" ]; then
+      old_stty="$(stty -g)"
+      stty -echo
+      IFS= read -r value || true
+      stty "${old_stty}"
+      printf "\n" >&2
+    else
+      IFS= read -r value || true
+    fi
+
+    value="$(strip_bracketed_paste "${value}")"
     value="$(printf "%s" "${value}" | trim_newlines)"
 
     if [ -z "${value}" ]; then
