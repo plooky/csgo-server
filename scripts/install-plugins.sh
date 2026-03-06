@@ -19,6 +19,30 @@ cleanup() {
 }
 trap cleanup EXIT
 
+is_archive_ref() {
+  value="$1"
+  case "${value}" in
+    ""|*" "*) return 1 ;;
+  esac
+
+  case "${value}" in
+    *.tar.gz|*.tgz|*.tar|*.zip) return 0 ;;
+    http://*.tar.gz|http://*.tgz|http://*.tar|http://*.zip) return 0 ;;
+    https://*.tar.gz|https://*.tgz|https://*.tar|https://*.zip) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+resolve_archive_url() {
+  source_url="$1"
+  ref="$2"
+
+  case "${ref}" in
+    http://*|https://*) printf "%s" "${ref}" ;;
+    *) printf "%s/%s" "${source_url%/*}" "${ref}" ;;
+  esac
+}
+
 install_archive() {
   name="$1"
   url="$2"
@@ -50,6 +74,16 @@ install_archive() {
   curl -fsSL --retry 3 --retry-delay 2 -D "${headers_path}" "${url}" -o "${archive_path}"
 
   if ! extract_archive "${archive_path}"; then
+    first_line="$(head -n 1 "${archive_path}" | tr -d '\r\n' || true)"
+    if [ -n "${first_line}" ] && is_archive_ref "${first_line}"; then
+      resolved_url="$(resolve_archive_url "${url}" "${first_line}")"
+      echo "[plugin-bootstrap] ${name} latest pointer resolved to ${resolved_url}"
+      curl -fsSL --retry 3 --retry-delay 2 -D "${headers_path}" "${resolved_url}" -o "${archive_path}"
+      if extract_archive "${archive_path}"; then
+        return 0
+      fi
+    fi
+
     content_type="$(grep -i '^content-type:' "${headers_path}" | tail -n 1 | cut -d' ' -f2- | tr -d '\r' || true)"
     if [ -n "${content_type}" ]; then
       echo "[plugin-bootstrap] ${name} download content-type: ${content_type}" >&2
