@@ -62,6 +62,7 @@ services:
       RETRY_ATTEMPTS: ${RETRY_ATTEMPTS:-5}
     volumes:
       - ./data/csgo:/home/steam/csgo-dedicated
+      - ./scripts/srcds_run.sh:/home/steam/csgo-dedicated/srcds_run:ro
     ports:
       - "${SRCDS_PORT:-27015}:${SRCDS_PORT:-27015}/udp"
       - "${SRCDS_PORT:-27015}:${SRCDS_PORT:-27015}/tcp"
