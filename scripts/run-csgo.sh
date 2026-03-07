@@ -181,14 +181,27 @@ find_steam_runtime_run() {
   local candidate
   for candidate in \
     "/home/steam/Steam/ubuntu12_32/steam-runtime/run.sh" \
+    "/home/steam/Steam/steamapps/common/SteamLinuxRuntime_scout/_v2-entry-point" \
+    "/home/steam/Steam/steamapps/common/SteamLinuxRuntime_soldier/_v2-entry-point" \
+    "/home/steam/steamcmd/linux32/steam-runtime/run.sh" \
     "/home/steam/.steam/steam/ubuntu12_32/steam-runtime/run.sh" \
-    "/home/steam/.local/share/Steam/ubuntu12_32/steam-runtime/run.sh"
+    "/home/steam/.steam/root/ubuntu12_32/steam-runtime/run.sh" \
+    "/home/steam/.local/share/Steam/ubuntu12_32/steam-runtime/run.sh" \
+    "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime_scout/_v2-entry-point" \
+    "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime_soldier/_v2-entry-point"
   do
     if [[ -f "${candidate}" ]]; then
       echo "${candidate}"
       return 0
     fi
   done
+
+  candidate="$(find /home/steam -maxdepth 8 -type f \( -path '*/steam-runtime/run.sh' -o -name '_v2-entry-point' \) 2>/dev/null | head -n 1 || true)"
+  if [[ -n "${candidate}" ]]; then
+    echo "${candidate}"
+    return 0
+  fi
+
   return 1
 }
 
@@ -236,11 +249,19 @@ case "${LAUNCHER}" in
   */csgo.sh|*/csgo_linux64)
     RUNTIME_RUN="$(find_steam_runtime_run || true)"
     if [[ -z "${RUNTIME_RUN}" ]]; then
-      echo "[csgo] Could not find Steam scout runtime run.sh for ${LAUNCHER}" >&2
-      exit 23
+      echo "[csgo] Could not find Steam scout runtime wrapper. Trying direct launch with STEAM_RUNTIME=1." >&2
+      export STEAM_RUNTIME=1
+      exec "${LAUNCHER}" -dedicated "${ARGS[@]}"
     fi
     echo "[csgo] Using runtime wrapper: ${RUNTIME_RUN}"
-    exec "${RUNTIME_RUN}" "${LAUNCHER}" -dedicated "${ARGS[@]}"
+    case "${RUNTIME_RUN}" in
+      */_v2-entry-point)
+        exec "${RUNTIME_RUN}" --verb=waitforexitandrun -- "${LAUNCHER}" -dedicated "${ARGS[@]}"
+        ;;
+      *)
+        exec "${RUNTIME_RUN}" "${LAUNCHER}" -dedicated "${ARGS[@]}"
+        ;;
+    esac
     ;;
   *)
     exec "${LAUNCHER}" "${ARGS[@]}"
