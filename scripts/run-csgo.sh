@@ -7,6 +7,7 @@ UPDATE_ON_START="${UPDATE_ON_START:-1}"
 STEAM_LOGIN="${STEAM_LOGIN:-anonymous}"
 STEAM_USER="${STEAM_USER:-}"
 STEAM_PASS="${STEAM_PASS:-}"
+USE_STEAM_PASSWORD_LOGIN="${USE_STEAM_PASSWORD_LOGIN:-0}"
 
 SRCDS_TOKEN="${SRCDS_TOKEN:-}"
 SRCDS_HOSTNAME="${SRCDS_HOSTNAME:-csgo server}"
@@ -23,6 +24,21 @@ SRCDS_MAXPLAYERS="${SRCDS_MAXPLAYERS:-12}"
 TV_ENABLE="${TV_ENABLE:-1}"
 
 mkdir -p "${APP_ROOT}"
+
+check_writable_dir() {
+  local dir="$1"
+  local marker="${dir}/.write-test-$$"
+  mkdir -p "${dir}"
+  if ! touch "${marker}" 2>/dev/null; then
+    echo "[csgo] Directory is not writable: ${dir}" >&2
+    ls -ld "${dir}" >&2 || true
+    return 1
+  fi
+  rm -f "${marker}" 2>/dev/null || true
+}
+
+check_writable_dir "${APP_ROOT}" || exit 21
+check_writable_dir "/home/steam/Steam" || exit 22
 
 find_steamcmd() {
   local candidate
@@ -57,7 +73,7 @@ if [[ "${UPDATE_ON_START}" == "1" ]]; then
     exit 17
   fi
 
-  if [[ -n "${STEAM_USER}" && -n "${STEAM_PASS}" ]]; then
+  if [[ -n "${STEAM_USER}" && -n "${STEAM_PASS}" && "${USE_STEAM_PASSWORD_LOGIN}" == "1" ]]; then
     echo "[csgo] Using authenticated Steam login for app update"
     set +e
     "${STEAMCMD_BIN}" \
@@ -68,7 +84,7 @@ if [[ "${UPDATE_ON_START}" == "1" ]]; then
     steamcmd_status=${PIPESTATUS[0]}
     set -e
   elif [[ -n "${STEAM_USER}" ]]; then
-    echo "[csgo] Using Steam user login for app update"
+    echo "[csgo] Using Steam user login for app update (session/guard cache)"
     set +e
     "${STEAMCMD_BIN}" \
       +force_install_dir "${APP_ROOT}" \

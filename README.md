@@ -31,6 +31,11 @@ If logs show `No subscription` for app `4465480`, add local Steam auth (not comm
 - `printf '%s' 'your_steam_username' > secrets/steam_user`
 - `printf '%s' 'your_steam_password' > secrets/steam_pass`
 
+If logs show `Disk write failure`, fix host permissions and free space:
+- `df -h`
+- `sudo chown -R 1000:1000 data/steam data/csgo`
+- `sudo chmod -R u+rwX data/steam data/csgo`
+
 Optional: hidden secret input mode instead of paste-friendly visible input:
 - `SECRET_PROMPT_MODE=hidden docker compose --profile setup run --rm secret-init`
 
@@ -85,6 +90,7 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
    - `nano .env`
    - keep `STEAM_APP_ID=4465480` for CS:GO legacy
    - set `STEAM_USER` or create `secrets/steam_user` for non-anonymous updates
+   - keep `USE_STEAM_PASSWORD_LOGIN=0` for normal boot (uses cached login session)
 6. Set server config in local overrides.
    - `nano overrides.local/csgo/cfg/custom/01-server-identity.cfg` (set `hostname`)
    - `nano overrides.local/csgo/cfg/custom/02-access-security.cfg` (set `sv_downloadurl` to `http://host:8080/csgo`)
