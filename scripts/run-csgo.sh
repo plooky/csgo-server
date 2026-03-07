@@ -7,6 +7,7 @@ UPDATE_ON_START="${UPDATE_ON_START:-1}"
 STEAM_LOGIN="${STEAM_LOGIN:-anonymous}"
 STEAM_USER="${STEAM_USER:-}"
 STEAM_PASS="${STEAM_PASS:-}"
+STEAM_GUARD_CODE="${STEAM_GUARD_CODE:-}"
 USE_STEAM_PASSWORD_LOGIN="${USE_STEAM_PASSWORD_LOGIN:-0}"
 
 SRCDS_TOKEN="${SRCDS_TOKEN:-}"
@@ -76,11 +77,19 @@ if [[ "${UPDATE_ON_START}" == "1" ]]; then
   if [[ -n "${STEAM_USER}" && -n "${STEAM_PASS}" && "${USE_STEAM_PASSWORD_LOGIN}" == "1" ]]; then
     echo "[csgo] Using authenticated Steam login for app update"
     set +e
-    "${STEAMCMD_BIN}" \
-      +force_install_dir "${APP_ROOT}" \
-      +login "${STEAM_USER}" "${STEAM_PASS}" \
-      +app_update "${STEAM_APP_ID}" validate \
-      +quit 2>&1 | tee "${update_log}"
+    if [[ -n "${STEAM_GUARD_CODE}" ]]; then
+      "${STEAMCMD_BIN}" \
+        +force_install_dir "${APP_ROOT}" \
+        +login "${STEAM_USER}" "${STEAM_PASS}" "${STEAM_GUARD_CODE}" \
+        +app_update "${STEAM_APP_ID}" validate \
+        +quit 2>&1 | tee "${update_log}"
+    else
+      "${STEAMCMD_BIN}" \
+        +force_install_dir "${APP_ROOT}" \
+        +login "${STEAM_USER}" "${STEAM_PASS}" \
+        +app_update "${STEAM_APP_ID}" validate \
+        +quit 2>&1 | tee "${update_log}"
+    fi
     steamcmd_status=${PIPESTATUS[0]}
     set -e
   elif [[ -n "${STEAM_USER}" ]]; then

@@ -2,6 +2,8 @@
 set -euo pipefail
 
 STEAM_USER="${STEAM_USER:-}"
+STEAM_PASS="${STEAM_PASS:-}"
+STEAM_GUARD_CODE="${STEAM_GUARD_CODE:-}"
 STEAM_APP_ID="${STEAM_APP_ID:-4465480}"
 APP_ROOT="/home/steam/csgo-dedicated"
 
@@ -37,13 +39,27 @@ if [[ -z "${STEAM_USER}" ]]; then
   exit 1
 fi
 
+if [[ -z "${STEAM_PASS}" ]]; then
+  read -r -s -p "Steam password: " STEAM_PASS
+  echo
+fi
+
+if [[ -z "${STEAM_PASS}" ]]; then
+  echo "[steam-login] Steam password is required." >&2
+  exit 1
+fi
+
+if [[ -z "${STEAM_GUARD_CODE}" ]]; then
+  read -r -p "Steam Guard code (optional, press Enter to skip): " STEAM_GUARD_CODE
+fi
+
 mkdir -p "${APP_ROOT}"
 
 echo "[steam-login] Login may ask for password and Steam Guard code."
 echo "[steam-login] Steam session data is persisted in ./data/steam."
 "${STEAMCMD_BIN}" \
   +force_install_dir "${APP_ROOT}" \
-  +login "${STEAM_USER}" \
+  +login "${STEAM_USER}" "${STEAM_PASS}" "${STEAM_GUARD_CODE}" \
   +app_info_print "${STEAM_APP_ID}" \
   +quit
 

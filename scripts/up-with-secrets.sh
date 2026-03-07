@@ -35,6 +35,10 @@ if [ -f "${SECRETS_DIR}/steam_pass" ]; then
   export STEAM_PASS="$(read_secret "${SECRETS_DIR}/steam_pass")"
 fi
 
+if [ -f "${SECRETS_DIR}/steam_guard_code" ]; then
+  export STEAM_GUARD_CODE="$(read_secret "${SECRETS_DIR}/steam_guard_code")"
+fi
+
 if [ "$#" -eq 0 ]; then
   set -- up -d
 fi

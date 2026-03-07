@@ -30,6 +30,7 @@ Do these steps from the repo root.
 If logs show `No subscription` for app `4465480`, add local Steam auth (not committed):
 - `printf '%s' 'your_steam_username' > secrets/steam_user`
 - `printf '%s' 'your_steam_password' > secrets/steam_pass`
+- `printf '%s' '12345' > secrets/steam_guard_code` (optional one-time code for guarded logins)
 
 If logs show `Disk write failure`, fix host permissions and free space:
 - `df -h`
@@ -46,6 +47,7 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
 - On startup, tracked defaults are applied first, then `overrides.local` overrides them.
 - `.env` and `secrets/srcds_*` are gitignored local runtime config/secrets.
 - optional `secrets/steam_user` and `secrets/steam_pass` are gitignored local-only Steam auth.
+- optional `secrets/steam_guard_code` is gitignored and can help first guarded login.
 - After `git pull`, sync newly added default files without overwriting your local edits:
   - `cp -an overrides/csgo/. overrides.local/csgo/`
 
@@ -86,6 +88,7 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
    - `docker compose --profile setup run --rm secret-init`
 4. Login to Steam account for app `4465480`.
    - `docker compose --profile setup run --rm steam-login`
+   - enter username, password, and guard code when prompted
 5. Set runtime config.
    - `nano .env`
    - keep `STEAM_APP_ID=4465480` for CS:GO legacy
