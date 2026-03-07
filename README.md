@@ -63,6 +63,7 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
 - `fastdl/csgo`: FastDL document root (custom maps/files live here).
 - `scripts/install-plugins.sh`: installs/updates Metamod + Sourcemod, then applies overrides.
 - `scripts/run-csgo.sh`: updates app `4465480` (unless disabled) and launches the dedicated server.
+  - auto-installs Steam Linux Runtime app `1070560` if required by `csgo.sh`.
 - `scripts/build-fastdl.sh`: copies map assets from server data and creates `.bz2` archives.
 - `scripts/up-with-secrets.sh`: starts compose after reading secret files.
 - `data/csgo` (ignored): live game files downloaded by SteamCMD in-container.
@@ -94,6 +95,7 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
    - keep `STEAM_APP_ID=4465480` for CS:GO legacy
    - set `STEAM_USER` or create `secrets/steam_user` for non-anonymous updates
    - keep `USE_STEAM_PASSWORD_LOGIN=0` for normal boot (uses cached login session)
+   - optional: `UPDATE_ON_START=0` after first successful install to skip long verify pass on each boot
 6. Set server config in local overrides.
    - `nano overrides.local/csgo/cfg/custom/01-server-identity.cfg` (set `hostname`)
    - `nano overrides.local/csgo/cfg/custom/02-access-security.cfg` (set `sv_downloadurl` to `http://host:8080/csgo`)

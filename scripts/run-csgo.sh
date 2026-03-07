@@ -9,6 +9,7 @@ STEAM_USER="${STEAM_USER:-}"
 STEAM_PASS="${STEAM_PASS:-}"
 STEAM_GUARD_CODE="${STEAM_GUARD_CODE:-}"
 USE_STEAM_PASSWORD_LOGIN="${USE_STEAM_PASSWORD_LOGIN:-0}"
+STEAM_RUNTIME_APP_ID="${STEAM_RUNTIME_APP_ID:-1070560}"
 
 SRCDS_TOKEN="${SRCDS_TOKEN:-}"
 SRCDS_HOSTNAME="${SRCDS_HOSTNAME:-csgo server}"
@@ -205,6 +206,39 @@ find_steam_runtime_run() {
   return 1
 }
 
+install_steam_runtime_if_missing() {
+  local runtime_run
+  runtime_run="$(find_steam_runtime_run || true)"
+  if [[ -n "${runtime_run}" ]]; then
+    echo "${runtime_run}"
+    return 0
+  fi
+
+  echo "[csgo] Steam runtime wrapper not found; installing Steam Linux Runtime app ${STEAM_RUNTIME_APP_ID}"
+  set +e
+  "${STEAMCMD_BIN}" \
+    +login anonymous \
+    +app_update "${STEAM_RUNTIME_APP_ID}" validate \
+    +quit >/tmp/steam-runtime-install.log 2>&1
+  runtime_status=$?
+  set -e
+
+  if [[ ${runtime_status} -ne 0 ]]; then
+    echo "[csgo] Failed to install Steam runtime app ${STEAM_RUNTIME_APP_ID}" >&2
+    tail -n 60 /tmp/steam-runtime-install.log >&2 || true
+    return 1
+  fi
+
+  runtime_run="$(find_steam_runtime_run || true)"
+  if [[ -z "${runtime_run}" ]]; then
+    echo "[csgo] Steam runtime app installed, but runtime wrapper still not found" >&2
+    return 1
+  fi
+
+  echo "${runtime_run}"
+  return 0
+}
+
 LAUNCHER="$(find_launcher || true)"
 if [[ -z "${LAUNCHER}" ]]; then
   echo "[csgo] Could not find a dedicated server launcher under ${APP_ROOT}" >&2
@@ -247,7 +281,7 @@ fi
 
 case "${LAUNCHER}" in
   */csgo.sh|*/csgo_linux64)
-    RUNTIME_RUN="$(find_steam_runtime_run || true)"
+    RUNTIME_RUN="$(install_steam_runtime_if_missing || true)"
     if [[ -z "${RUNTIME_RUN}" ]]; then
       echo "[csgo] Could not find Steam scout runtime wrapper. Trying direct launch with STEAM_RUNTIME=1." >&2
       export STEAM_RUNTIME=1
