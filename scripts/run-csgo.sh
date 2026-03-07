@@ -278,7 +278,6 @@ find_steam_runtime_run() {
       make_runtime_launcher_executable "${candidate}"
       echo "${candidate}"
       return 0
-      ;;
     fi
   done
 
