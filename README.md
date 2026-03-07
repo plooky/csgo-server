@@ -1,7 +1,7 @@
 # csgo-server
 
 Docker Compose stack for:
-- CS:GO dedicated server (`cm2network/csgo`)
+- CS:GO legacy dedicated server (Steam app `4465480` via `cm2network/steamcmd`)
 - Apache FastDL (map/file hosting)
 - Metamod + Sourcemod bootstrap
 
@@ -47,6 +47,7 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
 - `secrets/init-secrets.sh`: interactive secret setup script meant to run in a one-off container.
 - `fastdl/csgo`: FastDL document root (custom maps/files live here).
 - `scripts/install-plugins.sh`: installs/updates Metamod + Sourcemod, then applies overrides.
+- `scripts/run-csgo.sh`: updates app `4465480` (unless disabled) and launches the dedicated server.
 - `scripts/build-fastdl.sh`: copies map assets from server data and creates `.bz2` archives.
 - `scripts/up-with-secrets.sh`: starts compose after reading secret files.
 - `data/csgo` (ignored): live game files downloaded by SteamCMD in-container.
@@ -71,6 +72,7 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
    - `docker compose --profile setup run --rm secret-init`
 4. Set runtime config.
    - `nano .env`
+   - keep `STEAM_APP_ID=4465480` for CS:GO legacy
 5. Set server config in local overrides.
    - `nano overrides.local/csgo/cfg/custom/01-server-identity.cfg` (set `hostname`)
    - `nano overrides.local/csgo/cfg/custom/02-access-security.cfg` (set `sv_downloadurl` to `http://host:8080/csgo`)

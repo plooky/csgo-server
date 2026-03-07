@@ -39,13 +39,15 @@ services:
       sh /scripts/install-plugins.sh"
 
   csgo:
-    image: cm2network/csgo:latest
+    image: cm2network/steamcmd:latest
     container_name: csgo-server
     restart: unless-stopped
     depends_on:
       plugin-bootstrap:
         condition: service_completed_successfully
     environment:
+      STEAM_APP_ID: ${STEAM_APP_ID:-4465480}
+      UPDATE_ON_START: ${UPDATE_ON_START:-1}
       SRCDS_TOKEN: ${SRCDS_TOKEN:-}
       SRCDS_HOSTNAME: ${SRCDS_HOSTNAME:-csgo server}
       SRCDS_RCONPW: ${SRCDS_RCONPW:-}
@@ -62,7 +64,8 @@ services:
       RETRY_ATTEMPTS: ${RETRY_ATTEMPTS:-5}
     volumes:
       - ./data/csgo:/home/steam/csgo-dedicated
-      - ./scripts/srcds_run.sh:/home/steam/csgo-dedicated/srcds_run:ro
+      - ./scripts/run-csgo.sh:/scripts/run-csgo.sh:ro
+    command: /bin/bash /scripts/run-csgo.sh
     ports:
       - "${SRCDS_PORT:-27015}:${SRCDS_PORT:-27015}/udp"
       - "${SRCDS_PORT:-27015}:${SRCDS_PORT:-27015}/tcp"

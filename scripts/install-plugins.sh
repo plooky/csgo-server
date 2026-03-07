@@ -109,60 +109,6 @@ apply_overrides() {
   fi
 }
 
-ensure_srcds_run_launcher() {
-  app_root="$(dirname "${GAME_ROOT}")"
-  launcher="${app_root}/srcds_run"
-
-  if [ -f "${launcher}" ]; then
-    chmod +x "${launcher}" || true
-    return 0
-  fi
-
-  cat > "${launcher}" <<'EOF'
-#!/bin/sh
-set -eu
-
-APP_ROOT="$(cd "$(dirname "$0")" && pwd)"
-
-find_target() {
-  for target in \
-    "$APP_ROOT/game/cs2.sh" \
-    "$APP_ROOT/game/csgo.sh" \
-    "$APP_ROOT/srcds_linux" \
-    "$APP_ROOT/game/bin/linuxsteamrt64/cs2"
-  do
-    if [ -x "$target" ] || [ -f "$target" ]; then
-      printf "%s" "$target"
-      return 0
-    fi
-  done
-  return 1
-}
-
-TARGET="$(find_target || true)"
-if [ -z "$TARGET" ]; then
-  echo "[srcds_run shim] Could not find a supported dedicated server launcher under $APP_ROOT" >&2
-  exit 1
-fi
-
-case "$TARGET" in
-  */cs2.sh|*/csgo.sh|*/cs2)
-    exec "$TARGET" -dedicated "$@"
-    ;;
-  */srcds_linux)
-    export LD_LIBRARY_PATH="$APP_ROOT/bin:${LD_LIBRARY_PATH:-}"
-    exec "$TARGET" "$@"
-    ;;
-  *)
-    exec "$TARGET" "$@"
-    ;;
-esac
-EOF
-
-  chmod +x "${launcher}"
-  echo "[plugin-bootstrap] Installed compatibility launcher at ${launcher}"
-}
-
 if [ "${FORCE_PLUGIN_REINSTALL}" = "1" ]; then
   echo "[plugin-bootstrap] FORCE_PLUGIN_REINSTALL=1, clearing existing plugin files"
   rm -rf "${GAME_ROOT}/addons/metamod" "${GAME_ROOT}/addons/sourcemod" "${GAME_ROOT}/addons/metamod.vdf"
@@ -182,7 +128,6 @@ fi
 
 apply_overrides "tracked" "${DEFAULT_OVERRIDES_ROOT}"
 apply_overrides "local" "${LOCAL_OVERRIDES_ROOT}"
-ensure_srcds_run_launcher
 
 cat > "${GAME_ROOT}/addons/.bootstrap-manifest" <<EOF
 MMS_URL=${MMS_URL}
