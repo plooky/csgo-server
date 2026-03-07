@@ -177,6 +177,21 @@ find_launcher() {
   return 1
 }
 
+find_steam_runtime_run() {
+  local candidate
+  for candidate in \
+    "/home/steam/Steam/ubuntu12_32/steam-runtime/run.sh" \
+    "/home/steam/.steam/steam/ubuntu12_32/steam-runtime/run.sh" \
+    "/home/steam/.local/share/Steam/ubuntu12_32/steam-runtime/run.sh"
+  do
+    if [[ -f "${candidate}" ]]; then
+      echo "${candidate}"
+      return 0
+    fi
+  done
+  return 1
+}
+
 LAUNCHER="$(find_launcher || true)"
 if [[ -z "${LAUNCHER}" ]]; then
   echo "[csgo] Could not find a dedicated server launcher under ${APP_ROOT}" >&2
@@ -189,6 +204,7 @@ chmod +x "${LAUNCHER}" || true
 echo "[csgo] Using launcher: ${LAUNCHER}"
 
 ARGS=(
+  -steam
   -game csgo
   -console
   -usercon
@@ -218,7 +234,13 @@ fi
 
 case "${LAUNCHER}" in
   */csgo.sh|*/csgo_linux64)
-    exec "${LAUNCHER}" -dedicated "${ARGS[@]}"
+    RUNTIME_RUN="$(find_steam_runtime_run || true)"
+    if [[ -z "${RUNTIME_RUN}" ]]; then
+      echo "[csgo] Could not find Steam scout runtime run.sh for ${LAUNCHER}" >&2
+      exit 23
+    fi
+    echo "[csgo] Using runtime wrapper: ${RUNTIME_RUN}"
+    exec "${RUNTIME_RUN}" "${LAUNCHER}" -dedicated "${ARGS[@]}"
     ;;
   *)
     exec "${LAUNCHER}" "${ARGS[@]}"
