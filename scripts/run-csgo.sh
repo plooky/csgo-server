@@ -218,7 +218,7 @@ is_runtime_launcher() {
     run.sh)
       [[ "${candidate}" == */steam-runtime/run.sh ]] && return 0
       ;;
-    run|_v2-entry-point|scout-on-soldier-entry-point-v2|entry-point|_entry-point)
+    run|_v2-entry-point|entry-point|_entry-point)
       case "${candidate}" in
         *SteamLinuxRuntime*|*"Steam Linux Runtime"*)
           return 0
@@ -293,8 +293,6 @@ find_steam_runtime_run() {
       -path '*/SteamLinuxRuntime*/run' -o \
       -path '*/Steam Linux Runtime*/_v2-entry-point' -o \
       -path '*/Steam Linux Runtime*/run' -o \
-      -path '*/SteamLinuxRuntime*/scout-on-soldier-entry-point-v2' -o \
-      -path '*/Steam Linux Runtime*/scout-on-soldier-entry-point-v2' -o \
       -path '*/SteamLinuxRuntime*/entry-point' -o \
       -path '*/Steam Linux Runtime*/entry-point' -o \
       -path '*/SteamLinuxRuntime*/_entry-point' -o \
