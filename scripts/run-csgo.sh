@@ -197,7 +197,11 @@ find_steam_runtime_run() {
     fi
   done
 
-  candidate="$(find /home/steam -maxdepth 8 -type f \( -path '*/steam-runtime/run.sh' -o -name '_v2-entry-point' \) 2>/dev/null | head -n 1 || true)"
+  candidate="$(find /home/steam -maxdepth 12 -type f \( \
+      -path '*/steam-runtime/run.sh' -o \
+      -name '_v2-entry-point' -o \
+      -path '*/SteamLinuxRuntime*/_v2-entry-point' \
+    \) 2>/dev/null | head -n 1 || true)"
   if [[ -n "${candidate}" ]]; then
     echo "${candidate}"
     return 0
@@ -214,7 +218,7 @@ install_steam_runtime_if_missing() {
     return 0
   fi
 
-  echo "[csgo] Steam runtime wrapper not found; installing Steam Linux Runtime app ${STEAM_RUNTIME_APP_ID}"
+  echo "[csgo] Steam runtime wrapper not found; installing Steam Linux Runtime app ${STEAM_RUNTIME_APP_ID}" >&2
   set +e
   "${STEAMCMD_BIN}" \
     +login anonymous \
@@ -232,6 +236,7 @@ install_steam_runtime_if_missing() {
   runtime_run="$(find_steam_runtime_run || true)"
   if [[ -z "${runtime_run}" ]]; then
     echo "[csgo] Steam runtime app installed, but runtime wrapper still not found" >&2
+    find /home/steam -maxdepth 8 -type d -name 'SteamLinuxRuntime*' 2>/dev/null >&2 || true
     return 1
   fi
 
