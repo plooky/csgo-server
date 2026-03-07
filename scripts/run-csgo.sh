@@ -180,23 +180,33 @@ find_launcher() {
 
 is_runtime_launcher() {
   local candidate="$1"
-  if [[ -z "${candidate}" || ! -f "${candidate}" || ! -x "${candidate}" ]]; then
+  local base
+  if [[ -z "${candidate}" || ! -f "${candidate}" ]]; then
     return 1
   fi
 
-  case "${candidate}" in
-    */steam-runtime/run.sh|\
-    */SteamLinuxRuntime*/_v2-entry-point|\
-    */SteamLinuxRuntime*/run|\
-    */SteamLinuxRuntime*/scout-on-soldier-entry-point-v2|\
-    */SteamLinuxRuntime*/entry-point|\
-    */SteamLinuxRuntime*/_entry-point)
-      return 0
+  base="$(basename "${candidate}")"
+  case "${base}" in
+    run.sh)
+      [[ "${candidate}" == */steam-runtime/run.sh ]] && return 0
       ;;
-    *)
-      return 1
+    run|_v2-entry-point|scout-on-soldier-entry-point-v2|entry-point|_entry-point)
+      case "${candidate}" in
+        *SteamLinuxRuntime*|*"Steam Linux Runtime"*)
+          return 0
+          ;;
+      esac
       ;;
   esac
+
+  return 1
+}
+
+make_runtime_launcher_executable() {
+  local candidate="$1"
+  if [[ -f "${candidate}" && ! -x "${candidate}" ]]; then
+    chmod +x "${candidate}" 2>/dev/null || true
+  fi
 }
 
 find_steam_runtime_run() {
@@ -211,6 +221,12 @@ find_steam_runtime_run() {
     "/home/steam/Steam/steamapps/common/SteamLinuxRuntime_sniper/run" \
     "/home/steam/Steam/steamapps/common/SteamLinuxRuntime/_v2-entry-point" \
     "/home/steam/Steam/steamapps/common/SteamLinuxRuntime/run" \
+    "/home/steam/Steam/steamapps/common/Steam Linux Runtime 1.0 (scout)/_v2-entry-point" \
+    "/home/steam/Steam/steamapps/common/Steam Linux Runtime 1.0 (scout)/run" \
+    "/home/steam/Steam/steamapps/common/Steam Linux Runtime 2.0 (soldier)/_v2-entry-point" \
+    "/home/steam/Steam/steamapps/common/Steam Linux Runtime 2.0 (soldier)/run" \
+    "/home/steam/Steam/steamapps/common/Steam Linux Runtime 3.0 (sniper)/_v2-entry-point" \
+    "/home/steam/Steam/steamapps/common/Steam Linux Runtime 3.0 (sniper)/run" \
     "/home/steam/steamcmd/linux32/steam-runtime/run.sh" \
     "/home/steam/.steam/steam/ubuntu12_32/steam-runtime/run.sh" \
     "/home/steam/.steam/root/ubuntu12_32/steam-runtime/run.sh" \
@@ -222,16 +238,25 @@ find_steam_runtime_run() {
     "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/_v2-entry-point" \
     "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run" \
     "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime/_v2-entry-point" \
-    "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime/run"
+    "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime/run" \
+    "/home/steam/.local/share/Steam/steamapps/common/Steam Linux Runtime 1.0 (scout)/_v2-entry-point" \
+    "/home/steam/.local/share/Steam/steamapps/common/Steam Linux Runtime 1.0 (scout)/run" \
+    "/home/steam/.local/share/Steam/steamapps/common/Steam Linux Runtime 2.0 (soldier)/_v2-entry-point" \
+    "/home/steam/.local/share/Steam/steamapps/common/Steam Linux Runtime 2.0 (soldier)/run" \
+    "/home/steam/.local/share/Steam/steamapps/common/Steam Linux Runtime 3.0 (sniper)/_v2-entry-point" \
+    "/home/steam/.local/share/Steam/steamapps/common/Steam Linux Runtime 3.0 (sniper)/run"
   do
     if is_runtime_launcher "${candidate}"; then
+      make_runtime_launcher_executable "${candidate}"
       echo "${candidate}"
       return 0
+      ;;
     fi
   done
 
   while IFS= read -r candidate; do
     if is_runtime_launcher "${candidate}"; then
+      make_runtime_launcher_executable "${candidate}"
       echo "${candidate}"
       return 0
     fi
@@ -239,9 +264,14 @@ find_steam_runtime_run() {
       -path '*/steam-runtime/run.sh' -o \
       -path '*/SteamLinuxRuntime*/_v2-entry-point' -o \
       -path '*/SteamLinuxRuntime*/run' -o \
+      -path '*/Steam Linux Runtime*/_v2-entry-point' -o \
+      -path '*/Steam Linux Runtime*/run' -o \
       -path '*/SteamLinuxRuntime*/scout-on-soldier-entry-point-v2' -o \
+      -path '*/Steam Linux Runtime*/scout-on-soldier-entry-point-v2' -o \
       -path '*/SteamLinuxRuntime*/entry-point' -o \
-      -path '*/SteamLinuxRuntime*/_entry-point' \
+      -path '*/Steam Linux Runtime*/entry-point' -o \
+      -path '*/SteamLinuxRuntime*/_entry-point' -o \
+      -path '*/Steam Linux Runtime*/_entry-point' \
     \) 2>/dev/null)
 
   return 1
