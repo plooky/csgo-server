@@ -134,20 +134,41 @@ else
 fi
 
 find_launcher() {
+  is_bad_shim() {
+    local candidate="$1"
+    if [[ ! -f "${candidate}" ]]; then
+      return 1
+    fi
+    if grep -q "srcds_run shim" "${candidate}" 2>/dev/null; then
+      return 0
+    fi
+    return 1
+  }
+
   local target
   for target in \
-    "${APP_ROOT}/srcds_run" \
     "${APP_ROOT}/srcds_linux" \
+    "${APP_ROOT}/bin/srcds_linux" \
     "${APP_ROOT}/game/csgo.sh" \
-    "${APP_ROOT}/csgo.sh"
+    "${APP_ROOT}/csgo.sh" \
+    "${APP_ROOT}/csgo_linux64" \
+    "${APP_ROOT}/srcds_run"
   do
     if [[ -f "${target}" ]]; then
+      if is_bad_shim "${target}"; then
+        continue
+      fi
       echo "${target}"
       return 0
     fi
   done
 
-  target="$(find "${APP_ROOT}" -type f \( -name srcds_run -o -name srcds_linux -o -name csgo.sh \) | head -n 1 || true)"
+  target="$(find "${APP_ROOT}" -type f \( -name srcds_run -o -name srcds_linux -o -name csgo.sh -o -name csgo_linux64 \) | head -n 1 || true)"
+  if [[ -n "${target}" ]]; then
+    if is_bad_shim "${target}"; then
+      target=""
+    fi
+  fi
   if [[ -n "${target}" ]]; then
     echo "${target}"
     return 0
@@ -195,4 +216,11 @@ if [[ -n "${SRCDS_PW}" ]]; then
   ARGS+=(+sv_password "${SRCDS_PW}")
 fi
 
-exec "${LAUNCHER}" "${ARGS[@]}"
+case "${LAUNCHER}" in
+  */csgo.sh|*/csgo_linux64)
+    exec "${LAUNCHER}" -dedicated "${ARGS[@]}"
+    ;;
+  *)
+    exec "${LAUNCHER}" "${ARGS[@]}"
+    ;;
+esac
