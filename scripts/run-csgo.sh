@@ -9,7 +9,7 @@ STEAM_USER="${STEAM_USER:-}"
 STEAM_PASS="${STEAM_PASS:-}"
 STEAM_GUARD_CODE="${STEAM_GUARD_CODE:-}"
 USE_STEAM_PASSWORD_LOGIN="${USE_STEAM_PASSWORD_LOGIN:-0}"
-STEAM_RUNTIME_APP_ID="${STEAM_RUNTIME_APP_ID:-1070560}"
+STEAM_RUNTIME_APP_ID="${STEAM_RUNTIME_APP_ID:-1628350}"
 
 SRCDS_TOKEN="${SRCDS_TOKEN:-}"
 SRCDS_HOSTNAME="${SRCDS_HOSTNAME:-csgo server}"
@@ -178,70 +178,122 @@ find_launcher() {
   return 1
 }
 
+is_runtime_launcher() {
+  local candidate="$1"
+  if [[ -z "${candidate}" || ! -f "${candidate}" || ! -x "${candidate}" ]]; then
+    return 1
+  fi
+
+  case "${candidate}" in
+    */steam-runtime/run.sh|\
+    */SteamLinuxRuntime*/_v2-entry-point|\
+    */SteamLinuxRuntime*/run|\
+    */SteamLinuxRuntime*/scout-on-soldier-entry-point-v2|\
+    */SteamLinuxRuntime*/entry-point|\
+    */SteamLinuxRuntime*/_entry-point)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 find_steam_runtime_run() {
   local candidate
   for candidate in \
     "/home/steam/Steam/ubuntu12_32/steam-runtime/run.sh" \
     "/home/steam/Steam/steamapps/common/SteamLinuxRuntime_scout/_v2-entry-point" \
+    "/home/steam/Steam/steamapps/common/SteamLinuxRuntime_scout/run" \
     "/home/steam/Steam/steamapps/common/SteamLinuxRuntime_soldier/_v2-entry-point" \
+    "/home/steam/Steam/steamapps/common/SteamLinuxRuntime_soldier/run" \
+    "/home/steam/Steam/steamapps/common/SteamLinuxRuntime_sniper/_v2-entry-point" \
+    "/home/steam/Steam/steamapps/common/SteamLinuxRuntime_sniper/run" \
+    "/home/steam/Steam/steamapps/common/SteamLinuxRuntime/_v2-entry-point" \
+    "/home/steam/Steam/steamapps/common/SteamLinuxRuntime/run" \
     "/home/steam/steamcmd/linux32/steam-runtime/run.sh" \
     "/home/steam/.steam/steam/ubuntu12_32/steam-runtime/run.sh" \
     "/home/steam/.steam/root/ubuntu12_32/steam-runtime/run.sh" \
     "/home/steam/.local/share/Steam/ubuntu12_32/steam-runtime/run.sh" \
     "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime_scout/_v2-entry-point" \
-    "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime_soldier/_v2-entry-point"
+    "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime_scout/run" \
+    "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime_soldier/_v2-entry-point" \
+    "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime_soldier/run" \
+    "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/_v2-entry-point" \
+    "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run" \
+    "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime/_v2-entry-point" \
+    "/home/steam/.local/share/Steam/steamapps/common/SteamLinuxRuntime/run"
   do
-    if [[ -f "${candidate}" ]]; then
+    if is_runtime_launcher "${candidate}"; then
       echo "${candidate}"
       return 0
     fi
   done
 
-  candidate="$(find /home/steam -maxdepth 12 -type f \( \
+  while IFS= read -r candidate; do
+    if is_runtime_launcher "${candidate}"; then
+      echo "${candidate}"
+      return 0
+    fi
+  done < <(find /home/steam -maxdepth 14 -type f \( \
       -path '*/steam-runtime/run.sh' -o \
-      -name '_v2-entry-point' -o \
-      -path '*/SteamLinuxRuntime*/_v2-entry-point' \
-    \) 2>/dev/null | head -n 1 || true)"
-  if [[ -n "${candidate}" ]]; then
-    echo "${candidate}"
-    return 0
-  fi
+      -path '*/SteamLinuxRuntime*/_v2-entry-point' -o \
+      -path '*/SteamLinuxRuntime*/run' -o \
+      -path '*/SteamLinuxRuntime*/scout-on-soldier-entry-point-v2' -o \
+      -path '*/SteamLinuxRuntime*/entry-point' -o \
+      -path '*/SteamLinuxRuntime*/_entry-point' \
+    \) 2>/dev/null)
 
   return 1
 }
 
 install_steam_runtime_if_missing() {
   local runtime_run
+  local runtime_app_id
+  local attempted_ids=""
   runtime_run="$(find_steam_runtime_run || true)"
   if [[ -n "${runtime_run}" ]]; then
     echo "${runtime_run}"
     return 0
   fi
 
-  echo "[csgo] Steam runtime wrapper not found; installing Steam Linux Runtime app ${STEAM_RUNTIME_APP_ID}" >&2
-  set +e
-  "${STEAMCMD_BIN}" \
-    +login anonymous \
-    +app_update "${STEAM_RUNTIME_APP_ID}" validate \
-    +quit >/tmp/steam-runtime-install.log 2>&1
-  runtime_status=$?
-  set -e
+  for runtime_app_id in "${STEAM_RUNTIME_APP_ID}" 1628350 1391110 1070560; do
+    case " ${attempted_ids} " in
+      *" ${runtime_app_id} "*) continue ;;
+    esac
+    attempted_ids="${attempted_ids} ${runtime_app_id}"
 
-  if [[ ${runtime_status} -ne 0 ]]; then
-    echo "[csgo] Failed to install Steam runtime app ${STEAM_RUNTIME_APP_ID}" >&2
-    tail -n 60 /tmp/steam-runtime-install.log >&2 || true
-    return 1
-  fi
+    echo "[csgo] Steam runtime wrapper not found; installing Steam Linux Runtime app ${runtime_app_id}" >&2
+    set +e
+    "${STEAMCMD_BIN}" \
+      +force_install_dir "/home/steam/Steam" \
+      +login anonymous \
+      +app_update "${runtime_app_id}" validate \
+      +quit >/tmp/steam-runtime-install.log 2>&1
+    runtime_status=$?
+    set -e
 
-  runtime_run="$(find_steam_runtime_run || true)"
-  if [[ -z "${runtime_run}" ]]; then
-    echo "[csgo] Steam runtime app installed, but runtime wrapper still not found" >&2
-    find /home/steam -maxdepth 8 -type d -name 'SteamLinuxRuntime*' 2>/dev/null >&2 || true
-    return 1
-  fi
+    if [[ ${runtime_status} -ne 0 ]]; then
+      echo "[csgo] Failed to install Steam runtime app ${runtime_app_id}" >&2
+      tail -n 40 /tmp/steam-runtime-install.log >&2 || true
+      continue
+    fi
 
-  echo "${runtime_run}"
-  return 0
+    runtime_run="$(find_steam_runtime_run || true)"
+    if [[ -n "${runtime_run}" ]]; then
+      echo "${runtime_run}"
+      return 0
+    fi
+  done
+
+  echo "[csgo] Steam runtime app installed, but runtime wrapper still not found" >&2
+  find /home/steam -maxdepth 10 -type d -name 'SteamLinuxRuntime*' 2>/dev/null >&2 || true
+  find /home/steam -maxdepth 14 -type f \( \
+      -path '*/SteamLinuxRuntime*/run' -o \
+      -path '*/SteamLinuxRuntime*/*entry-point*' -o \
+      -path '*/steam-runtime/run.sh' \
+    \) 2>/dev/null | head -n 40 >&2 || true
+  return 1
 }
 
 LAUNCHER="$(find_launcher || true)"

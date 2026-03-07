@@ -63,7 +63,7 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
 - `fastdl/csgo`: FastDL document root (custom maps/files live here).
 - `scripts/install-plugins.sh`: installs/updates Metamod + Sourcemod, then applies overrides.
 - `scripts/run-csgo.sh`: updates app `4465480` (unless disabled) and launches the dedicated server.
-  - auto-installs Steam Linux Runtime app `1070560` if required by `csgo.sh`.
+  - auto-installs Steam Linux Runtime app `1628350` (and fallback runtime app IDs) if required by `csgo.sh`.
 - `scripts/build-fastdl.sh`: copies map assets from server data and creates `.bz2` archives.
 - `scripts/up-with-secrets.sh`: starts compose after reading secret files.
 - `data/csgo` (ignored): live game files downloaded by SteamCMD in-container.
