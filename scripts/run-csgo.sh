@@ -22,9 +22,32 @@ TV_ENABLE="${TV_ENABLE:-1}"
 
 mkdir -p "${APP_ROOT}"
 
+find_steamcmd() {
+  local candidate
+  for candidate in \
+    "$(command -v steamcmd 2>/dev/null || true)" \
+    "/home/steam/steamcmd/steamcmd.sh" \
+    "/home/steam/steamcmd/steamcmd" \
+    "/usr/games/steamcmd" \
+    "/usr/bin/steamcmd"
+  do
+    if [[ -n "${candidate}" && -f "${candidate}" ]]; then
+      echo "${candidate}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+STEAMCMD_BIN="$(find_steamcmd || true)"
+if [[ -z "${STEAMCMD_BIN}" ]]; then
+  echo "[csgo] Could not find steamcmd binary in container" >&2
+  exit 1
+fi
+
 if [[ "${UPDATE_ON_START}" == "1" ]]; then
   echo "[csgo] Updating app ${STEAM_APP_ID} into ${APP_ROOT}"
-  steamcmd \
+  "${STEAMCMD_BIN}" \
     +force_install_dir "${APP_ROOT}" \
     +login "${STEAM_LOGIN}" \
     +app_update "${STEAM_APP_ID}" validate \
