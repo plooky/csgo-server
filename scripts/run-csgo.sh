@@ -403,7 +403,7 @@ case "${LAUNCHER}" in
     fi
     echo "[csgo] Using runtime wrapper: ${RUNTIME_RUN}"
     case "${RUNTIME_RUN}" in
-      */_v2-entry-point)
+      */_v2-entry-point|*/scout-on-soldier-entry-point-v2|*/entry-point|*/_entry-point)
         exec "${RUNTIME_RUN}" --verb=waitforexitandrun -- "${LAUNCHER}" -dedicated "${ARGS[@]}"
         ;;
       *)
