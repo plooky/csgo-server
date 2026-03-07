@@ -5,6 +5,8 @@ APP_ROOT="${APP_ROOT:-/home/steam/csgo-dedicated}"
 STEAM_APP_ID="${STEAM_APP_ID:-4465480}"
 UPDATE_ON_START="${UPDATE_ON_START:-1}"
 STEAM_LOGIN="${STEAM_LOGIN:-anonymous}"
+STEAM_USER="${STEAM_USER:-}"
+STEAM_PASS="${STEAM_PASS:-}"
 
 SRCDS_TOKEN="${SRCDS_TOKEN:-}"
 SRCDS_HOSTNAME="${SRCDS_HOSTNAME:-csgo server}"
@@ -46,12 +48,62 @@ if [[ -z "${STEAMCMD_BIN}" ]]; then
 fi
 
 if [[ "${UPDATE_ON_START}" == "1" ]]; then
+  update_log="$(mktemp)"
+  trap 'rm -f "${update_log}"' EXIT
+
   echo "[csgo] Updating app ${STEAM_APP_ID} into ${APP_ROOT}"
-  "${STEAMCMD_BIN}" \
-    +force_install_dir "${APP_ROOT}" \
-    +login "${STEAM_LOGIN}" \
-    +app_update "${STEAM_APP_ID}" validate \
-    +quit
+  if [[ "${STEAM_APP_ID}" == "4465480" && -z "${STEAM_USER}" ]]; then
+    echo "[csgo] App ${STEAM_APP_ID} requires account login. Run: docker compose --profile setup run --rm steam-login" >&2
+    exit 17
+  fi
+
+  if [[ -n "${STEAM_USER}" && -n "${STEAM_PASS}" ]]; then
+    echo "[csgo] Using authenticated Steam login for app update"
+    set +e
+    "${STEAMCMD_BIN}" \
+      +force_install_dir "${APP_ROOT}" \
+      +login "${STEAM_USER}" "${STEAM_PASS}" \
+      +app_update "${STEAM_APP_ID}" validate \
+      +quit 2>&1 | tee "${update_log}"
+    steamcmd_status=${PIPESTATUS[0]}
+    set -e
+  elif [[ -n "${STEAM_USER}" ]]; then
+    echo "[csgo] Using Steam user login for app update"
+    set +e
+    "${STEAMCMD_BIN}" \
+      +force_install_dir "${APP_ROOT}" \
+      +login "${STEAM_USER}" \
+      +app_update "${STEAM_APP_ID}" validate \
+      +quit 2>&1 | tee "${update_log}"
+    steamcmd_status=${PIPESTATUS[0]}
+    set -e
+  else
+    echo "[csgo] Using anonymous Steam login for app update"
+    set +e
+    "${STEAMCMD_BIN}" \
+      +force_install_dir "${APP_ROOT}" \
+      +login "${STEAM_LOGIN}" \
+      +app_update "${STEAM_APP_ID}" validate \
+      +quit 2>&1 | tee "${update_log}"
+    steamcmd_status=${PIPESTATUS[0]}
+    set -e
+  fi
+
+  if grep -q "No subscription" "${update_log}"; then
+    echo "[csgo] Steam account does not have access to app ${STEAM_APP_ID}." >&2
+    echo "[csgo] Add local secrets files: secrets/steam_user and secrets/steam_pass" >&2
+    exit 18
+  fi
+
+  if grep -q "Failed to install app '${STEAM_APP_ID}'" "${update_log}"; then
+    echo "[csgo] SteamCMD failed to install app ${STEAM_APP_ID}." >&2
+    exit 19
+  fi
+
+  if [[ ${steamcmd_status} -ne 0 ]]; then
+    echo "[csgo] SteamCMD exited with status ${steamcmd_status}" >&2
+    exit "${steamcmd_status}"
+  fi
 else
   echo "[csgo] UPDATE_ON_START=0, skipping Steam update"
 fi

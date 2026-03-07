@@ -27,6 +27,14 @@ if [ -z "${SRCDS_TOKEN}" ] || [ -z "${SRCDS_RCONPW}" ]; then
   exit 1
 fi
 
+if [ -f "${SECRETS_DIR}/steam_user" ]; then
+  export STEAM_USER="$(read_secret "${SECRETS_DIR}/steam_user")"
+fi
+
+if [ -f "${SECRETS_DIR}/steam_pass" ]; then
+  export STEAM_PASS="$(read_secret "${SECRETS_DIR}/steam_pass")"
+fi
+
 if [ "$#" -eq 0 ]; then
   set -- up -d
 fi

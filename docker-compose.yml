@@ -1,6 +1,21 @@
 name: csgo-server
 
 services:
+  steam-login:
+    image: cm2network/steamcmd:latest
+    profiles:
+      - setup
+    stdin_open: true
+    tty: true
+    environment:
+      STEAM_USER: ${STEAM_USER:-}
+      STEAM_APP_ID: ${STEAM_APP_ID:-4465480}
+    volumes:
+      - ./data/steam:/home/steam/Steam
+      - ./data/csgo:/home/steam/csgo-dedicated
+      - ./scripts/steam-login.sh:/scripts/steam-login.sh:ro
+    command: /bin/bash /scripts/steam-login.sh
+
   secret-init:
     image: alpine:3.20
     profiles:
@@ -48,6 +63,8 @@ services:
     environment:
       STEAM_APP_ID: ${STEAM_APP_ID:-4465480}
       UPDATE_ON_START: ${UPDATE_ON_START:-1}
+      STEAM_USER: ${STEAM_USER:-}
+      STEAM_PASS: ${STEAM_PASS:-}
       SRCDS_TOKEN: ${SRCDS_TOKEN:-}
       SRCDS_HOSTNAME: ${SRCDS_HOSTNAME:-csgo server}
       SRCDS_RCONPW: ${SRCDS_RCONPW:-}
@@ -63,6 +80,7 @@ services:
       TV_ENABLE: ${TV_ENABLE:-1}
       RETRY_ATTEMPTS: ${RETRY_ATTEMPTS:-5}
     volumes:
+      - ./data/steam:/home/steam/Steam
       - ./data/csgo:/home/steam/csgo-dedicated
       - ./scripts/run-csgo.sh:/scripts/run-csgo.sh:ro
     command: /bin/bash /scripts/run-csgo.sh

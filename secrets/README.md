@@ -15,3 +15,12 @@ Hidden input mode:
 Non-interactive mode:
 
 `SRCDS_TOKEN=... SRCDS_RCONPW=... docker compose --profile setup run --rm secret-init`
+
+Optional local Steam auth for app install (if anonymous shows `No subscription`):
+
+- `printf '%s' 'your_steam_username' > secrets/steam_user`
+- `printf '%s' 'your_steam_password' > secrets/steam_pass`
+
+Recommended one-time interactive login for app `4465480`:
+
+- `docker compose --profile setup run --rm steam-login`

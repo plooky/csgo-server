@@ -15,15 +15,21 @@ Do these steps from the repo root.
    - `cp -an overrides/csgo/. overrides.local/csgo/`
 2. Create local-only secrets (required once).
    - `docker compose --profile setup run --rm secret-init`
-3. Set your server values (required).
+3. Login to Steam for app `4465480` access (required once).
+   - `docker compose --profile setup run --rm steam-login`
+4. Set your server values (required).
    - `nano .env`
    - `nano overrides.local/csgo/cfg/custom/01-server-identity.cfg`
    - `nano overrides.local/csgo/cfg/custom/02-access-security.cfg`
    - `nano overrides.local/csgo/motd.txt`
-4. Start containers.
+5. Start containers.
    - `sh ./scripts/up-with-secrets.sh`
-5. Verify the server is running.
+6. Verify the server is running.
    - `sh ./scripts/up-with-secrets.sh logs -f csgo`
+
+If logs show `No subscription` for app `4465480`, add local Steam auth (not committed):
+- `printf '%s' 'your_steam_username' > secrets/steam_user`
+- `printf '%s' 'your_steam_password' > secrets/steam_pass`
 
 Optional: hidden secret input mode instead of paste-friendly visible input:
 - `SECRET_PROMPT_MODE=hidden docker compose --profile setup run --rm secret-init`
@@ -34,12 +40,14 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
 - `overrides.local/csgo` is gitignored. Put your server-specific edits here.
 - On startup, tracked defaults are applied first, then `overrides.local` overrides them.
 - `.env` and `secrets/srcds_*` are gitignored local runtime config/secrets.
+- optional `secrets/steam_user` and `secrets/steam_pass` are gitignored local-only Steam auth.
 - After `git pull`, sync newly added default files without overwriting your local edits:
   - `cp -an overrides/csgo/. overrides.local/csgo/`
 
 ## Repo Layout
 
 - `docker-compose.yml`: services for secret init, plugin bootstrap, CS:GO, and FastDL.
+- `steam-login` setup service: one-time interactive Steam login with persistent session in `data/steam`.
 - `overrides/csgo`: tracked default overrides applied on boot.
 - `overrides.local/csgo` (ignored): local personal overrides applied after tracked defaults.
 - `overrides/csgo/cfg/custom/*.cfg`: modular server customization files.
@@ -51,6 +59,7 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
 - `scripts/build-fastdl.sh`: copies map assets from server data and creates `.bz2` archives.
 - `scripts/up-with-secrets.sh`: starts compose after reading secret files.
 - `data/csgo` (ignored): live game files downloaded by SteamCMD in-container.
+- `data/steam` (ignored): persisted SteamCMD login/session data.
 
 ## Prerequisites
 
@@ -70,14 +79,17 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
    - `cp -an overrides/csgo/. overrides.local/csgo/`
 3. Generate local secret files.
    - `docker compose --profile setup run --rm secret-init`
-4. Set runtime config.
+4. Login to Steam account for app `4465480`.
+   - `docker compose --profile setup run --rm steam-login`
+5. Set runtime config.
    - `nano .env`
    - keep `STEAM_APP_ID=4465480` for CS:GO legacy
-5. Set server config in local overrides.
+   - set `STEAM_USER` or create `secrets/steam_user` for non-anonymous updates
+6. Set server config in local overrides.
    - `nano overrides.local/csgo/cfg/custom/01-server-identity.cfg` (set `hostname`)
    - `nano overrides.local/csgo/cfg/custom/02-access-security.cfg` (set `sv_downloadurl` to `http://host:8080/csgo`)
    - `nano overrides.local/csgo/motd.txt` (set scoreboard website URL)
-6. Start services.
+7. Start services.
    - `sh ./scripts/up-with-secrets.sh`
 
 On startup, `plugin-bootstrap` installs Metamod + Sourcemod if missing (or forced), then applies tracked overrides and finally local overrides.
