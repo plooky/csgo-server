@@ -391,6 +391,14 @@ if [[ -n "${SRCDS_PW}" ]]; then
   ARGS+=(+sv_password "${SRCDS_PW}")
 fi
 
+prepare_srcds_runtime() {
+  local bundled_gcc="${APP_ROOT}/bin/libgcc_s.so.1"
+  local disabled_gcc="${APP_ROOT}/bin/libgcc_s.so.1.disabled-by-run-csgo"
+  if [[ -f "${bundled_gcc}" && ! -f "${disabled_gcc}" ]]; then
+    mv "${bundled_gcc}" "${disabled_gcc}" 2>/dev/null || true
+  fi
+}
+
 case "${LAUNCHER}" in
   */csgo.sh|*/csgo_linux64)
     RUNTIME_RUN="$(install_steam_runtime_if_missing || true)"
@@ -408,6 +416,10 @@ case "${LAUNCHER}" in
         exec "${RUNTIME_RUN}" "${LAUNCHER}" -dedicated "${ARGS[@]}"
         ;;
     esac
+    ;;
+  */srcds_run)
+    prepare_srcds_runtime
+    exec /bin/bash "${LAUNCHER}" "${ARGS[@]}"
     ;;
   *)
     exec "${LAUNCHER}" "${ARGS[@]}"
