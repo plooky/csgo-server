@@ -2,7 +2,7 @@
 set -euo pipefail
 
 APP_ROOT="${APP_ROOT:-/home/steam/csgo-dedicated}"
-STEAM_APP_ID="${STEAM_APP_ID:-4465480}"
+STEAM_APP_ID="${STEAM_APP_ID:-740}"
 UPDATE_ON_START="${UPDATE_ON_START:-1}"
 STEAM_LOGIN="${STEAM_LOGIN:-anonymous}"
 STEAM_USER="${STEAM_USER:-}"

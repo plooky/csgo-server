@@ -4,7 +4,7 @@ set -euo pipefail
 STEAM_USER="${STEAM_USER:-}"
 STEAM_PASS="${STEAM_PASS:-}"
 STEAM_GUARD_CODE="${STEAM_GUARD_CODE:-}"
-STEAM_APP_ID="${STEAM_APP_ID:-4465480}"
+STEAM_APP_ID="${STEAM_APP_ID:-740}"
 APP_ROOT="/home/steam/csgo-dedicated"
 
 find_steamcmd() {
