@@ -22,6 +22,6 @@ Optional local Steam auth for app install (if anonymous shows `No subscription`)
 - `printf '%s' 'your_steam_password' > secrets/steam_pass`
 - `printf '%s' '12345' > secrets/steam_guard_code` (optional one-time code)
 
-Recommended one-time interactive login for app `4465480`:
+Recommended one-time interactive login (only when your selected app needs account auth):
 
 - `docker compose --profile setup run --rm steam-login`

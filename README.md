@@ -1,7 +1,7 @@
 # csgo-server
 
 Docker Compose stack for:
-- CS:GO legacy dedicated server (Steam app `4465480` via `cm2network/steamcmd`)
+- CS:GO dedicated server (Steam app `740` by default via `cm2network/steamcmd`)
 - Apache FastDL (map/file hosting)
 - Metamod + Sourcemod bootstrap
 
@@ -15,7 +15,7 @@ Do these steps from the repo root.
    - `cp -an overrides/csgo/. overrides.local/csgo/`
 2. Create local-only secrets (required once).
    - `docker compose --profile setup run --rm secret-init`
-3. Login to Steam for app `4465480` access (required once).
+3. Optional: login to Steam if your configured app requires it.
    - `docker compose --profile setup run --rm steam-login`
 4. Set your server values (required).
    - `nano .env`
@@ -27,7 +27,7 @@ Do these steps from the repo root.
 6. Verify the server is running.
    - `sh ./scripts/up-with-secrets.sh logs -f csgo`
 
-If logs show `No subscription` for app `4465480`, add local Steam auth (not committed):
+If logs show `No subscription` for your configured app ID, add local Steam auth (not committed):
 - `printf '%s' 'your_steam_username' > secrets/steam_user`
 - `printf '%s' 'your_steam_password' > secrets/steam_pass`
 - `printf '%s' '12345' > secrets/steam_guard_code` (optional one-time code for guarded logins)
@@ -62,7 +62,7 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
 - `secrets/init-secrets.sh`: interactive secret setup script meant to run in a one-off container.
 - `fastdl/csgo`: FastDL document root (custom maps/files live here).
 - `scripts/install-plugins.sh`: installs/updates Metamod + Sourcemod, then applies overrides.
-- `scripts/run-csgo.sh`: updates app `4465480` (unless disabled) and launches the dedicated server.
+- `scripts/run-csgo.sh`: updates app `740` by default (unless disabled) and launches the dedicated server.
   - auto-installs Steam Linux Runtime app `1628350` (and fallback runtime app IDs) if required by `csgo.sh`.
 - `scripts/build-fastdl.sh`: copies map assets from server data and creates `.bz2` archives.
 - `scripts/up-with-secrets.sh`: starts compose after reading secret files.
@@ -87,13 +87,13 @@ Optional: hidden secret input mode instead of paste-friendly visible input:
    - `cp -an overrides/csgo/. overrides.local/csgo/`
 3. Generate local secret files.
    - `docker compose --profile setup run --rm secret-init`
-4. Login to Steam account for app `4465480`.
+4. Optional: login to Steam account if your configured app requires it.
    - `docker compose --profile setup run --rm steam-login`
    - enter username, password, and guard code when prompted
 5. Set runtime config.
    - `nano .env`
-   - keep `STEAM_APP_ID=4465480` for CS:GO legacy
-   - set `STEAM_USER` or create `secrets/steam_user` for non-anonymous updates
+   - keep `STEAM_APP_ID=740` for default CS:GO dedicated hosting
+   - set `STEAM_USER` or create `secrets/steam_user` only when your selected app requires account auth
    - keep `USE_STEAM_PASSWORD_LOGIN=0` for normal boot (uses cached login session)
    - optional: `UPDATE_ON_START=0` after first successful install to skip long verify pass on each boot
 6. Set server config in local overrides.
