@@ -176,12 +176,12 @@ find_launcher() {
 
   local target
   for target in \
+    "${APP_ROOT}/srcds_run" \
     "${APP_ROOT}/srcds_linux" \
     "${APP_ROOT}/bin/srcds_linux" \
     "${APP_ROOT}/game/csgo.sh" \
     "${APP_ROOT}/csgo.sh" \
-    "${APP_ROOT}/csgo_linux64" \
-    "${APP_ROOT}/srcds_run"
+    "${APP_ROOT}/csgo_linux64"
   do
     if [[ -f "${target}" ]]; then
       if is_bad_shim "${target}"; then
