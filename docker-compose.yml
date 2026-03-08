@@ -9,7 +9,7 @@ services:
     tty: true
     environment:
       STEAM_USER: ${STEAM_USER:-}
-      STEAM_APP_ID: ${STEAM_APP_ID:-4465480}
+      STEAM_APP_ID: ${STEAM_APP_ID:-740}
     volumes:
       - ./data/steam:/home/steam/Steam
       - ./data/csgo:/home/steam/csgo-dedicated
@@ -61,7 +61,7 @@ services:
       plugin-bootstrap:
         condition: service_completed_successfully
     environment:
-      STEAM_APP_ID: ${STEAM_APP_ID:-4465480}
+      STEAM_APP_ID: ${STEAM_APP_ID:-740}
       UPDATE_ON_START: ${UPDATE_ON_START:-1}
       STEAM_USER: ${STEAM_USER:-}
       STEAM_PASS: ${STEAM_PASS:-}
